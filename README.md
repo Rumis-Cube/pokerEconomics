@@ -1,10 +1,10 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14840266.svg)](https://doi.org/10.5281/zenodo.14840266)
+
 # Simulation Model
 
-## Disclaimer
+Simulation data is available in the DOI link below.
 
-This repository is part of an ongoing academic research project. The source code for [PokerHandEvaluator](https://github.com/HenryRLee/PokerHandEvaluator) used in this repository is governed by its respective license. All rights are reserved for the remaining source code.
-
----
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14840331.svg)](https://doi.org/10.5281/zenodo.14840331)
 
 ## The Model
 
