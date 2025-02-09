@@ -3,14 +3,14 @@
   "runs": 50000,
   "simulation": true,
   "player1": {
-    "id": "Sayan",
+    "id": "Player1",
     "bankroll": 100000000000,
     "strategy": "loose",
     "limit": 5000,
     "iniLimitMul": 100
   },
   "player2": {
-    "id": "Sourjya",
+    "id": "Player2",
     "bankroll": 100000000000,
     "strategy": "tight",
     "limit": 5000,

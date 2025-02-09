@@ -81,39 +81,110 @@ After calculating the parameters of an entity's decision-making process, a decis
 | `poker_metrics` | Metrics to evaluate an entity's position in the poker game.               |
 | `strategies`   | Player or strategy profiles.                                               |
 
-**Note**: Detailed README files for each folder will be added in the future.
+Below is the corrected Markdown text:
+
+---
+
+## Running a Simulation
+
+### Setting Up
+
+First, set up the strategies in `config.csv` (or create a new strategy configuration file) located in the `configs` directory. To create a new strategy, add an entry in the CSV file with the strategy's name and its numerical shift, risk, and bluff values. Then, edit `config.json` (or create a new configuration file) in the `configs` directory as needed to set up the simulation configuration. (This step is optional.)
+
+### Running a Single Simulation
+
+Run the `engine.py` script in the `engines` directory:
+
+```shell
+python3 engines/engine.py
+```
+
+After that, you will have two options:
+
+1. **Option 0:** Run the simulation using the configuration in `config.json`.
+2. **Option 1:** Run the simulation by manually setting up the simulation configurations.
+
+> **Note:** The `Inspector` is used to debug the simulation and obtain internal data. See the script at `components/Inspector.py` for more information.
+
+### Running Multiple Simulations
+
+You can also run multiple simulations using different simulation configuration files. First, run the `multi_engine.py` script in the `engines` directory:
+
+```shell
+python3 engines/multi_engine.py
+```
+
+When prompted about whether the simulation is running on AWS, enter `n`. Then, you will be presented with the following options:
+
+1. **Option 1:** Run simulations using multiple configuration files placed in a directory.
+2. **Option 2:** Run simulations by combining multiple strategies specified in `config.csv`.
+3. **Option 3:** Evaluate individual parameters (shift, risk, and bluff).
+
+## Interpreting the Output Data
+
+All simulation data, each stored in its own folder, is saved in the `data` directory, which is created after the first run of any engine.
+
+1. **config.json:** Contains the simulation configurations.
+2. **games.csv:** Contains the output of the simulation.
+
+### Interpreting the `games.csv`
+
+Each row in `games.csv` contains information about the players and the game state after each hand. The following columns are included:
+
+1. **hand_no:** The hand number.
+2. **player_1_id(strategy_name):** The bankroll of player 1 (the ID is set in the configuration file, e.g., in `config.json`) after the hand.
+3. **player_2_id(strategy_name):** The bankroll of player 2 after the hand.
+4. **player_1_id(ti):** The tendency index of player 1.
+5. **player_2_id(ti):** The tendency index of player 2.
+6. **winner:** The winner of the hand.
+7. **ending_round:** The round in which the hand ended.
+
+### Interpreting the Tendency Index
+
+A metric is used to determine the prodigality or frugality of an entity, which is important for evaluation purposes and to assess how "defective" a specific entity is. This metric is called the **Tendency Index (TI)**, where $-1 \leq TI \leq 1$, with -1 representing the most frugal entity, 1 representing the most prodigal entity, and 0 representing a balanced state.
+
+Each action is assigned a single "point." For example, a raise or a bet counts as 1 point. The total number of actions corresponds to the total points.
+
+#### Classification of Points
+
+The points are further classified into two types:
+
+1. **Prodigal Points (PP)**
+2. **Frugal Points (FP)**
+
+#### Calculation of Points
+
+**Prodigal points (PP)** are calculated as follows:
+
+$$
+PP = \text{bet\_points} + \text{raise\_points} + 0.5 \times \text{call\_points}
+$$
+
+and **frugal points (FP)** are calculated as follows:
+
+$$
+FP = \text{check\_points} + \text{fold\_points} + 0.5 \times \text{call\_points}
+$$
+
+> **Note:** A call is neither entirely a frugal nor entirely a prodigal move; therefore, its weight is split equally between \(PP\) and \(FP\).
+
+#### Evaluation of Entity's Behaviour
+
+Once \(FP\) and \(PP\) have been calculated, the entity's playing behaviour can be defined using the normalized difference, known as the Tendency Index (TI):
+
+$$
+TI = \frac{PP - FP}{PP + FP}
+$$
+
+with the following observations:
+
+1. **Prodigality exceeds Frugality:** when $0 < TI \leq 1$.
+2. **Balanced:** when $TI = 0$.
+3. **Frugality exceeds Prodigality:** when $-1 \leq TI < 0$.
 
 ---
 
 ## Miscellaneous
-
-### To-Do
-
-- [x] clean up repository
-  - [x] Remove chen from private value
-  - [x] Decide whether to keep the rational .py files
-  - [x] Clean up the batch configs
-  - [x] Refactor codebase
-    - [x] Refactor engine components
-    - [x] Refactor Strategy
-    - [x] Refactor poker_metrics
-- [x] Decide something for the seed
-- [x] clean up requirements.txt
-- [x] create an all encompassing setup script that compiles shared library, creates virtual python environment and installs all dependencies
-- [x] finalise all parameters (for strategies and others)
-- [x] final code review
-- [x] documentation (comments and other documentation for strategies)
-- [x] change preflop betting
-- [x] integrate risk into mean shifting
-- [x] observe river
-- [x] create optimal testing grounds for a more comprehensive testing
-- [x] parameter evaluation demo
-- [x] Bluffer limit implementation
-
-### System Checks Before Final Simulation
-
-- [x] Aggression factor displaying after end of simulation
-- [x] Maths of strategy verified
 
 ### Run docker
 
