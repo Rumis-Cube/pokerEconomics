@@ -4,7 +4,7 @@ import sys
 import traceback
 from tqdm import tqdm
 
-from checks.system_checks import chainValidate, extractChain
+from tests.system_checks import chainValidate, extractChain
 from components.Deck import Deck
 from components.Showdown import Showdown
 

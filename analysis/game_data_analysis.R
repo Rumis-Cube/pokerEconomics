@@ -29,23 +29,22 @@ for (dir_index in seq(2, length(game_dirs))) {
 
     metrics <- data.frame(
       player = character(),
-      ti = numeric(),
+      # ti = numeric(),
       win_ratio = numeric(),
       stringsAsFactors = FALSE
     )
     for (i in seq(2, 2 + total_players - 1)) {
       player <- columns[i]
-      ti <- game %>%
-        pull(.data[[columns[i + total_players]]]) %>%
-        last()
+      # ti <- game %>%
+      #   pull(.data[[columns[i + total_players]]]) %>%
+      #   last()
       player_name <- sub("\\(.*", "", player)
       win_ratio <- entity_counts %>%
         filter(grepl(player_name, .data[["winner"]])) %>%
         distinct(winner, .keep_all = TRUE) %>%
         pull(.data[["win_ratio"]])
 
-      metrics <- rbind(metrics, data.frame(player = player,
-                                           ti = ti, win_ratio = win_ratio))
+      metrics <- rbind(metrics, data.frame(player = player, win_ratio = win_ratio))
     }
     output_csv_file <- file.path(current_game_dir, "metrics.csv")
     write.csv(metrics, file = output_csv_file, row.names = FALSE)
@@ -75,9 +74,7 @@ for (dir_index in seq(2, length(game_dirs))) {
         title = paste("Comparison:",
                       paste(metrics$player,
                             collapse = " vs ")),
-        subtitle = paste(paste("Tendency Index:",
-                               paste(metrics$ti, collapse = ", ")),
-                         paste("Win Ratio:",
+        subtitle = paste(paste("Win Ratio:",
                                paste(metrics$win_ratio, collapse = ", ")),
                          sep = "\n")
       ) +
