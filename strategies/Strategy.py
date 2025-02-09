@@ -3,7 +3,6 @@ from poker_metrics.potential.potential import potential
 
 import random
 
-
 class Strategy:
     def __init__(self):
         """

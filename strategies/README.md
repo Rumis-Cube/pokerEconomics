@@ -1,59 +1,106 @@
 # Strategies
 
-There are two types of strategies,
+There are two types of strategies:
 
-1. **Action:** These strategies are trivial in nature and are very basic & simple.
-2. **Rational:** These strategies have a sense of rationality among them.
+1. **Action:**  
+   These strategies are trivial in nature and are very basic & simple.
+
+2. **Rational:**  
+   These strategies incorporate a degree of rationality by processing various game metrics before deciding on a move.
 
 ## Rational Strategies
 
 ### Strategy.py
 
-This is the main object that gives the strategy a sense of rationality. Here's how it works.
+This is the core object that gives a strategy its rational character. When a decision is to be made, the strategy takes in the current game information, processes several metrics, and ultimately decides on a move (for example, a frugal move or a prodigal move). Below is an outline of how it works:
 
-1. **Factoring in basic information:**
-   When the decide function is called before taking a decision (prodigal or frugal), if new information is present as a parameter (or not an empty dictionary), the following are internalised as class attributes.
-   - `seed` for the random functions.
-   - `holeCards` & `communityCards`.
-   - Current `round`.
-   - `bigBlind` required for setting initial pot limit.
-   - `callValue` required for finding pot odds.
-   - `playerBetAmt` is the amount player have bet till that point.
-   - `pot` current pot size.
-2. **Setting initial pot:**
-   Initial pot is the amount of that pot which occurs in the beginning of a specific round (pre-flop/flop/turn/river). This is done by calling the `self.setInitialPot()` method. It is to be calculated in two ways.
-   1. **If round == 0:**
-      When `round == 0`, the initial pot means the 2BB or 2 big blinds (actually it is 1SB + 1BB but for simplicity we will consider the pot to be taken in multiple of big blinds).
-   2. **If round != 0:**
-      Ideally in this scenario it is the value `pot - callValue` converted to nearest big blind but however this code is commented as it will not be required and instead a default of -1 will be the value.
-      Note that this is only applicable for heads-up games.
-3. **Setting round limiter:**
-   1. If `round == 0` and `iniLimitMultiplier` is an integer, then `limit` (the maximum a player can bet in a round) is capped at `iniLimitMultiplier * initialPot`.
-   2. Otherwise, it will set the limit with the `defaultLimit`.
-4. **Reason the decision:**
-   After preparation of the information, the `reason` method will be called to actually figure out more about the given information. It calculates the followings:
-   1. privateValue/hand_strength/hs (`self.hs`).
-   2. Inverts the hand_strength if `bluff > 0` and `self.hs < 0.5`.
-   3. potential/sp (0 if `round in [0, 3]`)
-   4. pot_odds/po
-   5. `self.ll = self.po/(1 - self.po)`.
-   6. `self.ul = self.sp + self.hs + self.risk`
-   7. `t_determiner = self.ul - self.ll`
-5. **Figure out appropriate move & bet size:**
-   The appropriate move will be determined with `t_determiner`. Here's how it works,
-   1. **`t_determiner <= 0:`** Out of money scenario - explicitly check/fold by setting `self.betAmt` as -1.
-   2. **`t_determiner == 0:`** In this point strategy is in balanced position. Only call/check by returning 0.
-   3. **`t_determiner > 0:`** In the money scenario. Get the odds `r` by calling the `odds` function in the `math_utils.py` and set the monetary value `pot * r` as bet amount `self.betAmt`.
-6. **Limit the bet amount:**
-   Limit the bet amount to the value of `self.limit` if bet amount is greater than limit by calling the `limiter` method.
-   - If the bet amount is explicitly -1 or 0 (check/fold/call), then the `limiter` method passes.
-   - Else,
-     - It calculates the total current bet `tcb = betAmt + playerBetAmt` which is the bet size that player raised/made till this point.
-     - If the `tcb > limit`,
-       - It calculates the required bet `req = callValue + playerBetAmt` to stay in the game.
-       - If `req > limit` then limit has been passed and makes the player forcefully call by setting `betAmt` to 0.
-       - Else it sets the `betAmt = limit - playerBetAmt`.
-7. **Convert bet amount to to blinds:**
-   The `toBlinds` method is then called to convert the bet amount to to the nearest multiple of big blind (if the bet amount is not equal to -1 or 0, indicating check/fold/call).
-8. **Set the appropriate move:**
-   Finally, an appropriate move is decided by calling the `setMove` method.
+1. **Factoring in Basic Information:**  
+   When the `decide` function is called with a non-empty information dictionary, the following data is internalized as class attributes:
+   - **Seed:** A seed value for random functions.
+   - **Hole Cards & Community Cards:** The cards dealt to the player and those on the board.
+   - **Round:** The current round of the game.
+   - **Big Blind:** The value of the big blind (used for calculating pot limits and converting bet sizes).
+   - **Call Value:** The amount required to call.
+   - **PlayerBetAmt:** The total amount the player has bet so far in the hand.
+   - **Pot:** The current pot size.
+
+2. **Setting the Initial Pot:**  
+   The method `setInitialPot()` calculates the initial pot value:
+   - **If `round == 0`:**  
+     The initial pot is set to twice the big blind (representing 1 small blind + 1 big blind for heads-up games).
+   - **If `round != 0`:**  
+     The initial pot is not recalculated (and remains at its default value, typically –1) since this calculation is only used for pre-flop rounds.
+
+3. **Setting the Round Limiter:**  
+   After reading the game information:
+   - If it is the pre-flop round (`round == 0`) and `iniLimitMultiplier` is set (i.e. greater than 0), the maximum limit (`limit`) is set to `iniLimitMultiplier * initialPot`.
+   - Otherwise, a default limit (`defaultLimit`) is used.
+
+4. **Reasoning the Decision:**  
+   The `reason()` method computes key metrics used in decision making:
+   - **Hand Strength (`hs`):**  
+     Calculated using the `privateValue` function (rounded to six decimal places).
+   - **Bluffing:**  
+     If the `bluff` flag is active (i.e. greater than 0) and `hs < 0.5`, a random chance may invert the hand strength via the `bluffer()` method.
+   - **Potential (`sp`):**  
+     Determined by the `potential` function when in rounds 1 or 2; otherwise set to 0.
+   - **Pot Odds (`ps`):**  
+     Computed as the ratio of the call value to the pot.
+   - **Upper Limits (`ul_` and `ul`):**  
+     - `ul_` is computed as either `(sp + risk)` for rounds 1 and 2 or `(hs + risk)` otherwise.
+     - `mu` is computed as `(hs + shift)`.
+     - The final upper limit (`ul`) is the maximum of `ul_` and `mu`.
+   - **Maximum Bet (`max_bet`):**  
+     Calculated as `ul * pot` (rounded appropriately).
+
+   (Note: The lower limit `ll` is set to `0` by default and is used in subsequent bet calculations.)
+
+5. **Determining the Bet Size:**  
+   The `setBet()` method uses the metrics computed earlier to decide on a bet:
+   - If `ul` is different from `ll` (with `ll` defaulting to 0), the odds `r` are calculated by calling the `odds` function with `(ll, ul, mu)`.
+   - If these odds (`r`) are less than the pot odds (`ps`), the strategy is deemed "out of money" and sets the bet amount (`betAmt`) to -1 (indicating a check or fold).
+   - Otherwise, the monetary value is set as `pot * r` and the bet amount is capped by `max_bet`.
+
+6. **Limiting the Bet Amount:**  
+   The `limiter()` method ensures that the bet amount does not exceed the overall limit:
+   - For a bet amount other than –1 or 0, it calculates the total current bet (`tcb = betAmt + playerBetAmt`).
+   - If `tcb` exceeds `limit`, the bet is adjusted to `limit - playerBetAmt`.
+
+7. **Converting Bet Amount to Blinds:**  
+   The `toBlinds()` method adjusts the bet amount so that it aligns with multiples of the big blind:
+   - If the bet amount is not in a check/fold/call scenario (i.e. not –1 or 0), the excess over the call value is rounded to the nearest multiple of the big blind.
+   - The bet amount is then re-adjusted accordingly.
+
+8. **Setting the Final Move:**  
+   Finally, the `setMove()` method determines the move to be made:
+   - **Check/Fold:**  
+     If `betAmt` is –1, the move is set to either a check (if `callValue` is 0) or a fold.
+   - **Frugal Move:**  
+     If `betAmt` is 0 or exactly equal to `callValue`, a frugal move is generated by calling `frugalMove()`.
+   - **Prodigal Move:**  
+     If `betAmt` is greater than `callValue`, a prodigal move is generated via `prodigalMove()`, using the excess bet amount.
+   - In rare scenarios where `betAmt` is less than `callValue`, the strategy defaults to folding.
+
+9. **The `decide()` Method:**  
+   When the strategy is used in evaluation mode (`eval` is `True`), the `decide()` method:
+   - Calls `initialise()` with the provided game information.
+   - Processes the information (via the methods described above) to determine the move.
+   - Optionally logs metrics via an `inspector` if one is attached.
+   - Returns the computed move.
+   
+   If `eval` is `False`, it raises a `NotImplementedError`, indicating that the strategy is meant to be overridden by subclasses.
+
+---
+
+### Additional Notes
+
+- **Modules & Functions:**  
+  This strategy uses helper functions (such as `privateValue`, `potential`, `odds`, `frugalMove`, and `prodigalMove`) imported from the `poker_metrics` package. These functions supply critical game metrics and standardized moves.
+
+- **Customization:**  
+  Attributes such as `shift`, `risk`, `bluff`, and `iniLimitMultiplier` can be adjusted (or overridden by subclasses) to alter the strategy’s aggressiveness or frugality.
+
+- **Error Handling:**  
+  A safeguard in `initialise()` raises an exception if the computed bet amount exceeds the allowed limit, ensuring consistency in the strategy's behavior.
+
+This structure provides a robust framework for developing rational poker strategies by sequentially processing game information and making decisions based on well-defined metrics.
