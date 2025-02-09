@@ -157,13 +157,13 @@ The points are further classified into two types:
 **Prodigal points (PP)** are calculated as follows:
 
 $$
-PP = \text{bet\_points} + \text{raise\_points} + 0.5 \times \text{call\_points}
+PP = betPoints + raisePoints + 0.5 \times callPoints
 $$
 
 and **frugal points (FP)** are calculated as follows:
 
 $$
-FP = \text{check\_points} + \text{fold\_points} + 0.5 \times \text{call\_points}
+FP = checkPoints + foldPoints + 0.5 \times callPoints
 $$
 
 > **Note:** A call is neither entirely a frugal nor entirely a prodigal move; therefore, its weight is split equally between \(PP\) and \(FP\).
